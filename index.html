@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#8bd8ff">
+  <title>Mis clases de inglés</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --pink: #ff5fa2;
+      --green: #2fca4b;
+      --gold: #ffd43b;
+      --ink: #493d64;
+      font-family: "Trebuchet MS", "Arial Rounded MT Bold", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; }
+    body { background: #6bb8e8; touch-action: manipulation; -webkit-tap-highlight-color: transparent; user-select: none; }
+    button { font: inherit; color: inherit; -webkit-tap-highlight-color: transparent; }
+    #game-container {
+      position: relative; isolation: isolate; display: flex; flex-direction: column;
+      width: min(100%, 560px); height: 100vh; height: 100dvh; min-height: 0;
+      margin: 0 auto; overflow: hidden;
+      background: radial-gradient(circle at 83% 13%, #fff7bd 0 45px, #fff2a3 46px 50px, transparent 51px),
+        linear-gradient(180deg, #8bd8ff 0%, #c8f0ff 53%, #a6e981 53%, #72d65a 100%);
+      box-shadow: 0 0 36px #225b8140;
+    }
+    #game-container::after {
+      content: ""; position: absolute; z-index: -1; left: -15%; right: -15%; bottom: 72px;
+      height: 22%; border-radius: 50% 50% 0 0 / 24% 24% 0 0;
+      background: linear-gradient(180deg, #8fe16a, #5dcc48); pointer-events: none;
+    }
+    .sky-decor { position: absolute; z-index: -1; pointer-events: none; opacity: .9; animation: drift 11s ease-in-out infinite alternate; }
+    .cloud-one { left: 4%; top: 17%; font-size: 36px; }
+    .cloud-two { right: 8%; top: 31%; font-size: 30px; animation-delay: -4s; }
+    .sky-star { left: 76%; top: 25%; font-size: 22px; animation: twinkle 1.8s ease-in-out infinite; }
+    @keyframes drift { to { transform: translateX(18px) translateY(4px); } }
+    @keyframes twinkle { 50% { transform: scale(1.35) rotate(18deg); opacity: .55; } }
+
+    #header {
+      position: relative; z-index: 2; display: flex; align-items: center; gap: 9px;
+      flex: 0 0 auto; min-height: 76px; padding: max(7px, env(safe-area-inset-top)) 60px 7px 10px;
+      background: #ffffffeb; border-radius: 0 0 22px 22px; box-shadow: 0 4px 12px #315c7a25;
+    }
+    #logoFrame {
+      position: relative; display: grid; place-items: center; flex: 0 0 58px;
+      width: 58px; height: 58px; overflow: hidden; border: 4px solid #ffc62f;
+      border-radius: 50%; background: linear-gradient(145deg, #fff5bd, #ffd6ea);
+      font-size: 30px; box-shadow: 0 2px 0 #e39e23;
+    }
+    #schoolLogo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    #schoolLogo:not([src]) { display: none; }
+    #titles { min-width: 0; flex: 1; }
+    #t1 { color: #dc4380; font-size: clamp(16px, 4.4vw, 22px); font-weight: 900; line-height: 1.04; letter-spacing: -.25px; }
+    #muteBtn {
+      position: absolute; top: 50%; right: 9px; width: 44px; height: 44px; transform: translateY(-50%);
+      border: 2px solid #fff; border-radius: 50%; background: #effbff; box-shadow: 0 3px 0 #a7d9ed;
+      font-size: 22px; cursor: pointer; touch-action: manipulation;
+    }
+    #stars {
+      position: relative; z-index: 2; display: flex; justify-content: center; align-items: center;
+      gap: clamp(5px, 2vw, 12px); flex: 0 0 48px; padding: 2px 8px 1px;
+    }
+    .star { display: inline-block; color: #fff; font-size: clamp(29px, 8vw, 39px); line-height: 1; filter: grayscale(1) opacity(.52); -webkit-text-stroke: 1px #e6ad34; text-shadow: 0 2px 0 #c8922e; }
+    .star.on { color: #ffd43b; filter: none; -webkit-text-stroke: 1px #ef9c00; animation: starPop .65s ease-out both; }
+    @keyframes starPop { 0% { transform: scale(.2) rotate(-80deg); } 65% { transform: scale(1.45) rotate(18deg); } 100% { transform: scale(1) rotate(0); } }
+
+    #screen {
+      position: relative; z-index: 1; display: flex; flex: 1 1 auto; flex-direction: column;
+      justify-content: center; align-items: center; min-height: 0; overflow: hidden; padding: 8px 12px 10px;
+    }
+    .scene { width: 100%; min-height: 0; display: flex; flex: 1; flex-direction: column; align-items: center; justify-content: center; gap: clamp(8px, 1.8vh, 16px); text-align: center; }
+    .welcome-title, .prompt, .lesson-caption, .final-title { margin: 0; color: var(--ink); font-weight: 900; text-align: center; text-shadow: 0 2px 0 #fff9; }
+    .welcome-title { font-size: clamp(25px, 7vw, 37px); color: #ed4a91; }
+    .prompt { width: 100%; max-width: 470px; flex: 0 0 auto; padding: 7px 12px; border: 3px solid #fff; border-radius: 20px; background: #ffffffd9; color: #58477e; font-size: clamp(19px, 5.4vw, 27px); line-height: 1.08; box-shadow: 0 4px 0 #70bedd65; }
+    .lesson-caption { padding: 5px 14px; border-radius: 18px; background: #ffffffd9; color: #3289bc; font-size: clamp(16px, 4.4vw, 22px); }
+    .letter-e { display: grid; place-items: center; min-height: 0; color: var(--pink); font-size: clamp(190px, 37vh, 300px); font-weight: 1000; line-height: .88; text-shadow: 0 8px 0 #c73678, 0 0 24px #fff, 0 0 48px #fff8; animation: letterFloat 1.4s ease-in-out infinite; }
+    .letter-e.glowing { animation: letterGlow .65s ease-in-out; }
+    @keyframes letterFloat { 50% { transform: translateY(-8px) rotate(-2deg); } }
+    @keyframes letterGlow { 0%,100% { transform: scale(1); } 45% { transform: scale(1.22); color: #ffcf32; text-shadow: 0 7px 0 #e29c20, 0 0 28px #fff, 0 0 70px #ffe34d; } }
+    .play-button {
+      display: grid; place-items: center; flex: 0 0 auto; width: 136px; height: 136px;
+      border: 7px solid #fff; border-radius: 50%;
+      background: radial-gradient(circle at 32% 25%, #99ff9c, #3ed64e 55%, #21ab3c);
+      color: #fff; font-size: 67px; line-height: 1;
+      box-shadow: 0 8px 0 #15862d, 0 12px 18px #32603a40, inset 0 3px 5px #fff8;
+      animation: buttonPulse 1.1s ease-in-out infinite; cursor: pointer; touch-action: manipulation;
+    }
+    .play-label { margin-top: -4px; color: #14742a; font-weight: 1000; font-size: 23px; text-shadow: 0 1px #fff; }
+    @keyframes buttonPulse { 50% { transform: scale(1.07); } }
+    .word-card {
+      display: flex; width: min(100%, 330px); min-height: 0; flex: 0 1 auto; flex-direction: column;
+      align-items: center; justify-content: center; gap: 5px; padding: 8px 14px 13px;
+      border: 5px solid #fff; border-radius: 30px; background: linear-gradient(145deg, #fff, #fff4d2);
+      box-shadow: 0 7px 0 #caa64780, 0 10px 18px #37445a20;
+      animation: cardIn .45s cubic-bezier(.2,.9,.3,1.2) both; cursor: pointer; touch-action: manipulation;
+    }
+    .word-art { display: grid; place-items: center; width: min(56vw, 235px); height: min(31vh, 235px); }
+    .word-art svg { width: 100%; height: 100%; overflow: visible; }
+    .word-label { padding: 1px 15px 4px; border-radius: 17px; background: #fff; color: #493d64; font-size: clamp(37px, 10vw, 54px); font-weight: 1000; line-height: 1; box-shadow: 0 2px 0 #eee0c1; }
+    .word-label .initial { color: #f1458b; font-size: 1.17em; }
+    @keyframes cardIn { from { transform: scale(.65) translateY(18px); opacity: .2; } to { transform: scale(1) translateY(0); opacity: 1; } }
+    .option-grid { display: grid; grid-template-columns: repeat(2, minmax(120px, 1fr)); gap: clamp(8px, 2.4vw, 14px); width: min(100%, 360px); justify-items: center; align-content: center; }
+    .option-grid .option:last-child:nth-child(odd) { grid-column: 1 / -1; width: min(100%, 170px); }
+    .option {
+      display: grid; place-items: center; width: 100%; min-width: 120px; min-height: 120px; aspect-ratio: 1;
+      padding: 9px; border: 5px solid #fff; border-radius: 28px;
+      background: linear-gradient(145deg, #fff, #fff0fa); box-shadow: 0 6px 0 #7aa9b777, 0 8px 14px #27536a20;
+      cursor: pointer; touch-action: manipulation; animation: cardIn .35s both;
+    }
+    .option svg { width: 100%; height: 100%; max-width: 135px; max-height: 135px; }
+    .option:active, .word-card:active { transform: scale(.94); }
+    .option.correct { background: #fff3a1; border-color: #ffe65c; }
+    .shaking { animation: shake .45s; }
+    @keyframes shake { 20%,60% { transform: translateX(-10px) rotate(-2deg); } 40%,80% { transform: translateX(10px) rotate(2deg); } }
+    .drag-area { display: flex; width: 100%; flex: 1; flex-direction: column; align-items: center; justify-content: space-evenly; min-height: 0; gap: 5px; }
+    .houses { display: flex; width: 100%; justify-content: center; align-items: center; gap: clamp(6px, 2vw, 14px); }
+    .house { display: grid; place-items: center; width: min(28vw, 140px); height: min(23vh, 140px); min-width: 98px; min-height: 100px; padding: 6px; border: 4px solid #fff; border-radius: 24px; background: #fff9d9; box-shadow: 0 5px 0 #ce9f5190; cursor: pointer; }
+    .house svg { width: 100%; height: 100%; }
+    .drag-elephant { position: relative; z-index: 2; display: grid; place-items: center; width: 128px; height: 128px; flex: 0 0 auto; padding: 7px; border: 5px solid #fff; border-radius: 32px; background: #fff; box-shadow: 0 6px 0 #769ac080; cursor: grab; touch-action: none; }
+    .drag-elephant:active { cursor: grabbing; }
+    .drag-elephant svg { width: 100%; height: 100%; pointer-events: none; }
+    .bubble-field { display: grid; grid-template-columns: repeat(2, minmax(100px, 1fr)); justify-items: center; align-content: center; gap: clamp(6px, 1.4vh, 12px) clamp(8px, 3vw, 18px); width: min(100%, 300px); flex: 1; min-height: 0; }
+    .bubble {
+      display: grid; place-items: center; width: min(29vw, 118px); height: min(17vh, 118px);
+      min-width: 100px; min-height: 98px; padding: 10px; border: 4px solid #fff; border-radius: 50%;
+      background: radial-gradient(circle at 30% 22%, #fff 0 7%, #dffbff 17%, #92e3ff9e 66%, #68b9f3aa 100%);
+      box-shadow: inset -5px -7px 10px #52aceb55, 0 4px 0 #50a5d380;
+      cursor: pointer; animation: bubbleBob 1.5s ease-in-out infinite alternate; touch-action: manipulation;
+    }
+    .bubble:nth-child(even) { animation-delay: -.7s; }
+    .bubble svg { width: 100%; height: 100%; max-width: 88px; max-height: 88px; }
+    .bubble.popped { animation: popAway .25s ease-out forwards; pointer-events: none; }
+    @keyframes bubbleBob { to { transform: translateY(-7px) rotate(3deg); } }
+    @keyframes popAway { to { transform: scale(1.7); opacity: 0; } }
+
+    #footer { position: relative; z-index: 3; flex: 0 0 clamp(122px, 17vh, 142px); min-height: 122px; padding-bottom: env(safe-area-inset-bottom); }
+    #teacher { position: absolute; bottom: 0; left: 4px; width: 104px; height: 126px; pointer-events: none; filter: drop-shadow(0 4px 2px #57394c25); }
+    #teacher svg { width: 100%; height: 100%; overflow: visible; }
+    #teacher-arm { transform-origin: 83px 100px; animation: wave 1.4s ease-in-out infinite; }
+    @keyframes wave { 0%,100% { transform: rotate(0deg); } 50% { transform: rotate(-16deg); } }
+    #teacher-mouth { transition: ry .09s; }
+    .talking #teacher-mouth { animation: mouthTalk .19s infinite alternate; }
+    @keyframes mouthTalk { to { ry: 8px; } }
+    #nextBtn {
+      position: absolute; left: 50%; bottom: 4px; display: grid; place-items: center;
+      width: 124px; height: 124px; min-width: 120px; min-height: 120px; padding: 0 0 8px 3px;
+      transform: translateX(-50%); border: 6px solid #fff; border-radius: 50%;
+      background: radial-gradient(circle at 32% 25%, #9aff9d, #42d952 56%, #22ad3e);
+      color: #fff; font-size: 72px; line-height: 1;
+      box-shadow: 0 7px 0 #15862d, 0 10px 16px #32603a40, inset 0 3px 5px #fff8;
+      animation: buttonPulse 1s ease-in-out infinite; cursor: pointer; touch-action: manipulation;
+    }
+    .hidden { display: none !important; }
+    .turn-cue { position: absolute; z-index: 5; left: 50%; top: 52%; display: flex; align-items: center; justify-content: center; gap: 10px; min-width: 170px; padding: 12px 18px; transform: translate(-50%,-50%); border: 4px solid #fff; border-radius: 24px; background: #fffde9ed; box-shadow: 0 5px 0 #d5b94c80; font-size: 48px; animation: cuePulse .55s ease-in-out infinite alternate; pointer-events: none; }
+    @keyframes cuePulse { to { transform: translate(-50%,-50%) scale(1.09); } }
+    #fx { position: absolute; z-index: 8; inset: 0; overflow: hidden; pointer-events: none; }
+    .sparkle { position: absolute; font-size: 27px; will-change: transform, opacity; transition: transform .75s ease-out, opacity .75s; }
+    .final-title { color: #e83e87; font-size: clamp(27px, 7vw, 40px); }
+    .final-stars { display: flex; justify-content: center; gap: 4px; font-size: clamp(35px, 10vw, 56px); }
+    .final-stars span { display: inline-block; animation: spinStar 2.2s ease-in-out infinite; filter: drop-shadow(0 3px 0 #c89118); }
+    .final-stars span:nth-child(2n) { animation-delay: -.7s; }
+    @keyframes spinStar { 50% { transform: rotateY(180deg) scale(1.14); } }
+
+    @media (max-height: 670px) {
+      #header { min-height: 68px; }
+      #logoFrame { width: 52px; height: 52px; flex-basis: 52px; }
+      #stars { flex-basis: 42px; }
+      #footer { flex-basis: 118px; min-height: 118px; }
+      #teacher { width: 94px; height: 115px; }
+      #nextBtn { width: 116px; height: 116px; min-width: 112px; min-height: 112px; font-size: 64px; }
+      .scene { gap: 7px; }
+      .letter-e { font-size: clamp(170px, 32vh, 230px); }
+      .play-button { width: 120px; height: 120px; font-size: 60px; }
+      .word-art { width: min(49vw, 195px); height: min(27vh, 195px); }
+      .bubble { width: 100px; height: 100px; min-width: 96px; min-height: 94px; }
+      .bubble-field { gap: 5px 8px; }
+    }
+    @media (min-width: 440px) {
+      .bubble-field { grid-template-columns: repeat(3, minmax(100px, 1fr)); width: min(100%, 420px); }
+      .option-grid { grid-template-columns: repeat(3, minmax(110px, 1fr)); width: min(100%, 470px); }
+      .option-grid .option:last-child:nth-child(odd) { grid-column: auto; width: 100%; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <div class="sky-decor cloud-one" aria-hidden="true">☁️</div>
+    <div class="sky-decor cloud-two" aria-hidden="true">☁️</div>
+    <div class="sky-decor sky-star" aria-hidden="true">⭐</div>
+    <header id="header">
+      <div id="logoFrame" aria-label="Espacio para el logo de la escuela"><span aria-hidden="true">🏫</span><img id="schoolLogo" alt="Logo de la escuela"></div>
+      <div id="titles"><div id="t1">Mis clases de inglés</div></div>
+      <button id="muteBtn" type="button" aria-label="Silenciar sonidos" title="Sonido">🔊</button>
+    </header>
+    <div id="stars" aria-label="Progreso: 0 de 5 estrellas"></div>
+    <main id="screen" aria-live="polite"></main>
+    <footer id="footer">
+      <div id="teacher" aria-hidden="true"></div>
+      <button id="nextBtn" class="hidden" type="button" aria-label="Continuar">➜</button>
+    </footer>
+    <div id="fx" aria-hidden="true"></div>
+  </div>
+
+  <script>
+    const VOICE_TEXT = {
+      start: "¡Hola! Te doy la bienvenida a tus clases de inglés. Hoy vamos a aprender la letra E. ¡Vamos a empezar!",
+      letter1: "¡Mira! Esta es la letra E. En inglés, la letra E se pronuncia... ¡i!, ¡i!, ¡i!. Ahora tú. Repite conmigo: ¡i!",
+      letter2: "¡Muy bien! Otra vez: ¡i!",
+      letter3: "¡Excelente! La letra E en inglés se pronuncia i.",
+      elephant1: "Élefant. Élefant significa elefante. Repite conmigo: élefant.",
+      elephant2: "¡Muy bien! Otra vez: élefant.",
+      egg1: "Ég. Ég significa huevo. Repite conmigo: ég.",
+      egg2: "¡Muy bien! Otra vez: ég.",
+      elbow1: "Élbou. Élbou significa codo. Repite conmigo: élbou.",
+      elbow2: "¡Muy bien! Otra vez: élbou.",
+      elephantWord: "Élefant",
+      eggWord: "Ég",
+      elbowWord: "Élbou",
+      allE: "Élefant, ég, élbou. ¡Todas empiezan con la letra E! Ahora vamos a jugar.",
+      q1: "¿Dónde está el élefant?",
+      q2: "¡Toca el ég!",
+      q3: "¿Dónde está el élbou?",
+      q4: "Ayuda al élefant a llegar a su casa con la letra E.",
+      q5: "¡Revienta solo las burbujas con la letra E!",
+      praise: ["¡Muy bien!", "¡Excelente!", "¡Eso es!"],
+      mistake: "¡Casi! Inténtalo otra vez.",
+      next: [
+        "¡Muy bien! Toca la flechita verde de abajo para seguir jugando.",
+        "¡Excelente! Toca la flechita verde y sigamos jugando.",
+        "¡Genial! Toca la flechita de color verde para continuar."
+      ],
+      nextRemind: "Toca la flechita verde de abajo.",
+      final: "¡Felicidades! ¡Ganaste las cinco estrellitas! ¡Eres un campeón del inglés! Toca el botón verde para jugar otra vez."
+    };
+    const AUDIO_FILES = {};
+
+    const SVG = {
+      elephant: `<svg viewBox="0 0 200 200" role="img" aria-label="Elefante"><g class="ear"><ellipse cx="62" cy="85" rx="38" ry="44" fill="#a9b8e8" stroke="#6b7bb8" stroke-width="4"/><ellipse cx="62" cy="85" rx="24" ry="30" fill="#ffb6d0"/></g><ellipse cx="120" cy="130" rx="60" ry="45" fill="#bccaf5" stroke="#6b7bb8" stroke-width="4"/><rect x="80" y="155" width="22" height="34" rx="10" fill="#bccaf5" stroke="#6b7bb8" stroke-width="4"/><rect x="140" y="155" width="22" height="34" rx="10" fill="#bccaf5" stroke="#6b7bb8" stroke-width="4"/><circle cx="105" cy="85" r="42" fill="#c8d4fa" stroke="#6b7bb8" stroke-width="4"/><path d="M80 105 Q60 150 30 140" stroke="#6b7bb8" stroke-width="22" fill="none" stroke-linecap="round"/><path d="M80 105 Q60 150 30 140" stroke="#c8d4fa" stroke-width="14" fill="none" stroke-linecap="round"/><circle cx="95" cy="75" r="7" fill="#222"/><circle cx="97" cy="72" r="2.5" fill="#fff"/><circle cx="25" cy="125" r="5" fill="#6bc8ff"><animate attributeName="cy" values="130;95;130" dur="1s" repeatCount="indefinite"/></circle><circle cx="15" cy="120" r="4" fill="#6bc8ff"><animate attributeName="cy" values="125;85;125" dur="1.2s" repeatCount="indefinite"/></circle><path d="M108 100 q8 6 16 0" stroke="#6b7bb8" stroke-width="3" fill="none"/></svg>`,
+      egg: `<svg viewBox="0 0 200 200" role="img" aria-label="Huevo"><g class="egg-shell"><ellipse cx="100" cy="110" rx="60" ry="78" fill="#fff8e7" stroke="#e0c58a" stroke-width="4"/><circle cx="80" cy="100" r="7" fill="#333"/><circle cx="120" cy="100" r="7" fill="#333"/><path d="M82 125 q18 16 36 0" stroke="#333" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="68" cy="118" r="8" fill="#ffb6c8"/><circle cx="132" cy="118" r="8" fill="#ffb6c8"/></g></svg>`,
+      chick: `<svg viewBox="0 0 200 200" role="img" aria-label="Pollito saliendo del huevo"><path d="M40 130 l15 -15 l15 15 l15 -15 l15 15 l15 -15 l15 15 l15 -15 l15 15 v40 a60 50 0 0 1 -120 0z" fill="#fff8e7" stroke="#e0c58a" stroke-width="4"/><circle cx="100" cy="95" r="45" fill="#ffe04a"/><circle cx="85" cy="88" r="6" fill="#333"/><circle cx="115" cy="88" r="6" fill="#333"/><path d="M92 102 l8 10 l8 -10z" fill="#ff9a1f"/></svg>`,
+      elbow: `<svg viewBox="0 0 240 250" role="img" aria-label="Niño sonriente con el brazo doblado y el codo resaltado"><ellipse cx="105" cy="232" rx="58" ry="8" fill="#557c4b" opacity=".2"/><path d="M82 166 74 216M126 166 137 216" fill="none" stroke="#315b91" stroke-width="25" stroke-linecap="round"/><path d="M74 214h20q10 0 13 12H62q1-8 12-12zm62 0h20q11 0 14 12h-43q0-8 9-12z" fill="#ffb04a" stroke="#9a5c42" stroke-width="3" stroke-linejoin="round"/><path d="M69 105Q56 116 60 166q34 16 76 0 4-48-15-62z" fill="#43b9d5" stroke="#287c9a" stroke-width="4"/><path d="M72 111 51 139 54 158" fill="none" stroke="#a9613d" stroke-width="21" stroke-linecap="round" stroke-linejoin="round"/><path d="M72 111 51 139 54 158" fill="none" stroke="#ffd0a8" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/><circle cx="54" cy="160" r="9" fill="#ffd0a8" stroke="#a9613d" stroke-width="3"/><path d="M130 109 171 130 171 77" fill="none" stroke="#a9613d" stroke-width="23" stroke-linecap="round" stroke-linejoin="round"/><path d="M130 109 171 130 171 77" fill="none" stroke="#ffd0a8" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/><path d="M157 80 153 68q-2-6 3-8 5-2 8 4V50q0-6 5-6t5 6v11V43q0-6 5-6t5 6v13V47q0-6 5-6t5 6v15V54q0-6 5-6t5 6v19q0 13-13 18l-17 3q-9 0-14-8z" fill="#ffd0a8" stroke="#a9613d" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M174 47v16m10-19v18m10-13v14" fill="none" stroke="#e5a273" stroke-width="2" stroke-linecap="round"/><rect x="118" y="98" width="25" height="24" rx="10" fill="#ffd0a8" stroke="#a9613d" stroke-width="3"/><path d="M81 91h35v20H81z" fill="#ffd0a8"/><circle cx="98" cy="58" r="36" fill="#ffd0a8" stroke="#a9613d" stroke-width="4"/><path d="M63 54Q60 17 97 16q34 0 38 35-14-13-31-16-18 11-41 19" fill="#60422f"/><path d="M69 37Q76 12 100 13q24 0 33 25-21-9-36-2-14 5-28 1" fill="#60422f"/><circle cx="85" cy="59" r="3.8" fill="#332a32"/><circle cx="111" cy="59" r="3.8" fill="#332a32"/><path d="M87 73q11 10 22 0" fill="none" stroke="#a7465d" stroke-width="4" stroke-linecap="round"/><circle cx="75" cy="69" r="5" fill="#ff9ebc"/><circle cx="121" cy="69" r="5" fill="#ff9ebc"/><circle cx="171" cy="130" r="24" fill="#ffe22e" opacity=".32"><animate attributeName="r" values="20;27;20" dur="1.1s" repeatCount="indefinite"/></circle><circle cx="171" cy="130" r="16" fill="none" stroke="#f2b900" stroke-width="5"/><circle cx="171" cy="130" r="5" fill="#ffd0a8" stroke="#a9613d" stroke-width="2"/><path d="M188 147 201 160" fill="none" stroke="#a9613d" stroke-width="3" stroke-linecap="round"/><rect x="176" y="157" width="57" height="25" rx="12" fill="#fff4b5" stroke="#e2ad2e" stroke-width="2"/><text x="204" y="174" text-anchor="middle" font-size="12" font-weight="900" font-family="Arial,sans-serif" fill="#9c5e1d">CODO</text><path d="M84 128q14 9 28 0" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round"/></svg>`,
+      ball: `<svg viewBox="0 0 100 100" role="img" aria-label="Pelota"><circle cx="50" cy="50" r="41" fill="#ff5a5a" stroke="#d93e4a" stroke-width="4"/><path d="M10 50h80M50 10v80" stroke="#fff" stroke-width="8"/><circle cx="50" cy="50" r="14" fill="#ffd43b"/></svg>`,
+      fish: `<svg viewBox="0 0 100 100" role="img" aria-label="Pez"><ellipse cx="43" cy="51" rx="34" ry="25" fill="#ff9a1f" stroke="#db6c19" stroke-width="3"/><path d="M72 51 96 30v42z" fill="#ff6f45" stroke="#db6c19" stroke-width="3"/><circle cx="31" cy="44" r="5" fill="#222"/><path d="M43 30q9 20 0 40" fill="none" stroke="#fff3" stroke-width="4"/></svg>`,
+      car: `<svg viewBox="0 0 100 100" role="img" aria-label="Auto"><path d="M13 48h74l8 25H6z" fill="#2a8de0" stroke="#1767a9" stroke-width="4"/><path d="m25 47 12-23h27l15 23z" fill="#75d9ff" stroke="#1767a9" stroke-width="4"/><circle cx="27" cy="74" r="11" fill="#444"/><circle cx="74" cy="74" r="11" fill="#444"/><circle cx="27" cy="74" r="5" fill="#fff"/><circle cx="74" cy="74" r="5" fill="#fff"/></svg>`,
+      tree: `<svg viewBox="0 0 100 100" role="img" aria-label="Árbol"><rect x="42" y="53" width="17" height="39" rx="4" fill="#8a5a2b"/><circle cx="50" cy="36" r="29" fill="#54c850" stroke="#319d43" stroke-width="4"/><circle cx="34" cy="43" r="16" fill="#6ed95d"/><circle cx="65" cy="44" r="16" fill="#43bb4c"/></svg>`,
+      nose: `<svg viewBox="0 0 100 100" role="img" aria-label="Nariz"><circle cx="50" cy="50" r="41" fill="#ffd0a6" stroke="#b86b42" stroke-width="4"/><circle cx="36" cy="38" r="5" fill="#333"/><circle cx="64" cy="38" r="5" fill="#333"/><path d="M50 32q-15 33 0 39q15-6 0-39" fill="#f0a878" stroke="#b86b42" stroke-width="3"/><path d="M39 78q11 9 22 0" fill="none" stroke="#c25e61" stroke-width="3"/></svg>`,
+      foot: `<svg viewBox="0 0 100 100" role="img" aria-label="Pie"><path d="M35 10h24v48q31 1 31 23H20q-8-4-3-14l18-18z" fill="#ffd0a6" stroke="#b86b42" stroke-width="4" stroke-linejoin="round"/><circle cx="28" cy="72" r="5" fill="#ffb7c8"/></svg>`,
+      house: (label) => `<svg viewBox="0 0 120 120" role="img" aria-label="Casa con la letra ${label}"><path d="M10 53 60 10l50 43" fill="#ff6e63" stroke="#c94348" stroke-width="6" stroke-linejoin="round"/><rect x="22" y="50" width="76" height="61" rx="5" fill="#ffe6a0" stroke="#d89c45" stroke-width="4"/><rect x="48" y="76" width="24" height="35" rx="12 12 0 0" fill="#9b6b48"/><text x="60" y="74" text-anchor="middle" font-size="34" font-weight="900" font-family="Arial,sans-serif" fill="#e34083">${label}</text></svg>`,
+      hand: `<svg viewBox="0 0 140 140" role="img" aria-label="Mano abierta con cinco dedos"><defs><linearGradient id="handGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff078"/><stop offset="1" stop-color="#ffbb24"/></linearGradient></defs><path d="M39 117 32 81q-3-14 9-20l10-5L36 45q-8-6-3-14 6-8 14-2l12 10V28q0-11 10-11t10 11v27V19q0-11 10-11t10 11v36V27q0-11 10-11t10 11v35V42q0-10 10-10t10 10v37q0 28-27 39l-8 4z" fill="url(#handGold)" stroke="#c77b18" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/><path d="M79 28v31m20-39v39m20-28v32" fill="none" stroke="#d99420" stroke-width="3.5" stroke-linecap="round"/><path d="M60 25v12m18-13v10m20-3v9m20 2v8" fill="none" stroke="#fff6c8" stroke-width="5" stroke-linecap="round"/><path d="M45 83q6 12 18 15m25 18 16-1" fill="none" stroke="#f09f35" stroke-width="3" stroke-linecap="round"/><path d="M30 55q-9-11-17-3" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round"/></svg>`
+    };
+
+    const TEACHER_SVG = `<svg viewBox="0 0 110 140" aria-hidden="true"><path d="M20 42Q17 7 54 8Q92 8 90 48L82 64H27z" fill="#573922"/><circle cx="55" cy="50" r="31" fill="#ffd8b8"/><path d="M25 42Q29 14 56 18Q79 17 85 42Q68 33 53 31Q42 40 25 42" fill="#573922"/><g id="teacher-eyes"><ellipse cx="44" cy="50" rx="3.5" ry="4.5" fill="#332a32"/><ellipse cx="66" cy="50" rx="3.5" ry="4.5" fill="#332a32"/></g><ellipse cx="35" cy="62" rx="6" ry="4" fill="#ff9ebc"/><ellipse cx="75" cy="62" rx="6" ry="4" fill="#ff9ebc"/><ellipse id="teacher-mouth" cx="55" cy="66" rx="7" ry="2" fill="#c8446e"/><path d="M27 138Q27 88 55 84Q85 87 86 138z" fill="#ff75ab" stroke="#e84c8b" stroke-width="3"/><path d="M35 92 22 117" stroke="#ffd8b8" stroke-width="12" stroke-linecap="round"/><g id="teacher-arm"><path d="M78 98 96 76" stroke="#ffd8b8" stroke-width="12" stroke-linecap="round"/><circle cx="97" cy="73" r="8" fill="#ffd8b8"/><path d="M99 66v-8m4 8 5-5m-12 5-4-6" stroke="#ffd8b8" stroke-width="4" stroke-linecap="round"/></g><path d="M43 88h24" stroke="#fff" stroke-width="4" stroke-linecap="round"/></svg>`;
+
+    const screenEl = document.getElementById("screen");
+    const gameEl = document.getElementById("game-container");
+    const fxEl = document.getElementById("fx");
+    const nextBtn = document.getElementById("nextBtn");
+    const starsEl = document.getElementById("stars");
+    const teacherEl = document.getElementById("teacher");
+    teacherEl.innerHTML = TEACHER_SVG;
+
+    let screenId = 0;
+    let starCount = 0;
+    let nextAction = null;
+    let nextLineIndex = 0;
+    let reminderTimer = 0;
+    let muted = false;
+    let activeSpeech = null;
+    let currentAudio = null;
+    let mouthTimer = 0;
+    let teacherVoice = null;
+    const waiters = new Set();
+    const cleanups = new Set();
+
+    function drawStars() {
+      starsEl.innerHTML = "";
+      for (let i = 0; i < 5; i++) {
+        const star = document.createElement("span");
+        star.className = "star" + (i < starCount ? " on" : "");
+        star.textContent = "★";
+        star.setAttribute("aria-hidden", "true");
+        starsEl.appendChild(star);
+      }
+      starsEl.setAttribute("aria-label", `Progreso: ${starCount} de 5 estrellas`);
+    }
+    drawStars();
+
+    function selectSpanishVoice() {
+      if (!window.speechSynthesis) return null;
+      const voices = window.speechSynthesis.getVoices().filter(v => v.lang && v.lang.toLowerCase().startsWith("es"));
+      const femaleNames = /paulina|sabina|dalia|m[oó]nica|google.*espa[nñ]ol.*(estados unidos|m[eé]xico)|female|mujer/i;
+      for (const lang of ["es-mx", "es-us", "es-419", "es"]) {
+        const group = voices.filter(v => v.lang.toLowerCase().replaceAll("_", "-").startsWith(lang));
+        if (group.length) return group.find(v => femaleNames.test(v.name)) || group[0];
+      }
+      return null;
+    }
+    teacherVoice = selectSpanishVoice();
+    if (window.speechSynthesis) {
+      window.speechSynthesis.addEventListener("voiceschanged", () => {
+        if (!teacherVoice) teacherVoice = selectSpanishVoice();
+      });
+    }
+    function waitForSpanishVoice() {
+      if (!window.speechSynthesis || teacherVoice) return Promise.resolve(teacherVoice);
+      return new Promise(resolve => {
+        let finished = false;
+        const done = () => {
+          if (finished) return;
+          finished = true;
+          window.speechSynthesis.removeEventListener("voiceschanged", check);
+          clearTimeout(timeout);
+          if (!teacherVoice) teacherVoice = selectSpanishVoice();
+          resolve(teacherVoice);
+        };
+        const check = () => { if (selectSpanishVoice()) { teacherVoice = selectSpanishVoice(); done(); } };
+        const timeout = setTimeout(done, 900);
+        window.speechSynthesis.addEventListener("voiceschanged", check);
+      });
+    }
+
+    function setTeacherTalking(on) {
+      teacherEl.classList.toggle("talking", on);
+      clearInterval(mouthTimer);
+      mouthTimer = 0;
+      const mouth = document.getElementById("teacher-mouth");
+      if (mouth) mouth.setAttribute("ry", on ? "6" : "2");
+      if (on) {
+        mouthTimer = setInterval(() => {
+          const currentMouth = document.getElementById("teacher-mouth");
+          if (currentMouth) currentMouth.setAttribute("ry", currentMouth.getAttribute("ry") === "2" ? "7" : "2");
+        }, 150);
+      }
+      if (musicGain && audioContext) musicGain.gain.setTargetAtTime(on ? 0.035 : 0.12, audioContext.currentTime, 0.16);
+    }
+
+    function cancelSpeech() {
+      if (activeSpeech) {
+        const job = activeSpeech;
+        activeSpeech = null;
+        clearTimeout(job.timer);
+        if (job.audio) {
+          job.audio.onended = null;
+          job.audio.onerror = null;
+          job.audio.pause();
+        }
+        if (window.speechSynthesis) window.speechSynthesis.cancel();
+        setTeacherTalking(false);
+        job.resolve(false);
+      }
+    }
+    async function speak(text, key) {
+      cancelSpeech();
+      return new Promise(resolve => {
+        const job = { resolve, timer: 0, audio: null };
+        activeSpeech = job;
+        const finish = (success = true) => {
+          if (activeSpeech !== job) return;
+          activeSpeech = null;
+          clearTimeout(job.timer);
+          setTeacherTalking(false);
+          resolve(success);
+        };
+        setTeacherTalking(true);
+        if (muted) {
+          job.timer = setTimeout(() => finish(false), 180);
+          return;
+        }
+        if (key && AUDIO_FILES[key]) {
+          const audio = new Audio(AUDIO_FILES[key]);
+          job.audio = audio;
+          currentAudio = audio;
+          audio.volume = Math.max(0, Math.min(1, 1));
+          audio.onended = () => finish(true);
+          audio.onerror = () => finish(false);
+          job.timer = setTimeout(() => finish(false), 45000);
+          audio.play().catch(() => finish(false));
+          return;
+        }
+        if (!window.speechSynthesis || typeof SpeechSynthesisUtterance === "undefined") {
+          job.timer = setTimeout(() => finish(false), 500);
+          return;
+        }
+        waitForSpanishVoice().then(selectedVoice => {
+          if (activeSpeech !== job) return;
+          const utterance = new SpeechSynthesisUtterance(text);
+          utterance.lang = "es-MX";
+          if (selectedVoice && selectedVoice.lang && selectedVoice.lang.toLowerCase().startsWith("es")) utterance.voice = selectedVoice;
+          utterance.rate = 0.8;
+          utterance.pitch = 1.15;
+          job.timer = setTimeout(() => finish(false), 10000 + text.length * 190);
+          utterance.onend = () => finish(true);
+          utterance.onerror = () => finish(false);
+          window.speechSynthesis.speak(utterance);
+        });
+      });
+    }
+
+    function wait(ms, id = screenId) {
+      if (id !== screenId) return Promise.resolve(false);
+      return new Promise(resolve => {
+        const item = { timer: 0, finish: null };
+        item.finish = value => {
+          clearTimeout(item.timer);
+          waiters.delete(item);
+          resolve(value);
+        };
+        item.timer = setTimeout(() => item.finish(id === screenId), ms);
+        waiters.add(item);
+      });
+    }
+    function clearWaiters() {
+      for (const item of [...waiters]) item.finish(false);
+    }
+    function addCleanup(fn) { cleanups.add(fn); return fn; }
+    function runCleanups() {
+      for (const fn of [...cleanups]) { try { fn(); } catch (_) {} }
+      cleanups.clear();
+    }
+    function hideNext() {
+      nextBtn.classList.add("hidden");
+      clearTimeout(reminderTimer);
+      reminderTimer = 0;
+      nextAction = null;
+    }
+    function enterScene(markup) {
+      screenId++;
+      cancelSpeech();
+      clearWaiters();
+      runCleanups();
+      hideNext();
+      fxEl.innerHTML = "";
+      screenEl.innerHTML = markup;
+      return screenId;
+    }
+    function beginNext(action, id = screenId) {
+      if (id !== screenId) return;
+      nextAction = action;
+      nextBtn.classList.remove("hidden");
+      sound.twinkle();
+      speak(VOICE_TEXT.next[nextLineIndex++ % VOICE_TEXT.next.length]).then(() => {
+        if (id !== screenId || nextBtn.classList.contains("hidden")) return;
+        reminderTimer = setTimeout(async () => {
+          if (id !== screenId || nextBtn.classList.contains("hidden")) return;
+          await speak(VOICE_TEXT.nextRemind);
+          if (id === screenId && !nextBtn.classList.contains("hidden")) {
+            reminderTimer = setTimeout(() => {
+              if (id === screenId && !nextBtn.classList.contains("hidden")) speak(VOICE_TEXT.nextRemind).then(() => scheduleReminder(id));
+            }, 6000);
+          }
+        }, 6000);
+      });
+    }
+    function scheduleReminder(id) {
+      if (id !== screenId || nextBtn.classList.contains("hidden")) return;
+      reminderTimer = setTimeout(async () => {
+        if (id !== screenId || nextBtn.classList.contains("hidden")) return;
+        await speak(VOICE_TEXT.nextRemind);
+        scheduleReminder(id);
+      }, 6000);
+    }
+    nextBtn.addEventListener("click", () => {
+      const action = nextAction;
+      if (!action) return;
+      sound.whoosh();
+      hideNext();
+      action();
+    });
+
+    let audioContext = null;
+    let masterGain = null;
+    let musicGain = null;
+    let musicTimer = 0;
+    function initAudio() {
+      if (audioContext) {
+        if (audioContext.state === "suspended") audioContext.resume().catch(() => {});
+        return;
+      }
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) return;
+      audioContext = new AudioContextClass();
+      masterGain = audioContext.createGain();
+      masterGain.gain.value = muted ? 0 : 0.72;
+      masterGain.connect(audioContext.destination);
+      musicGain = audioContext.createGain();
+      musicGain.gain.value = 0.12;
+      musicGain.connect(masterGain);
+      let step = 0;
+      const notes = [523.25,659.25,783.99,659.25,587.33,698.46,880,698.46,523.25,659.25,783.99,1046.5,987.77,783.99,659.25,587.33];
+      musicTimer = setInterval(() => {
+        if (!audioContext || audioContext.state !== "running") return;
+        const f = notes[step % notes.length];
+        playTone(f, .28, "triangle", .2, 0, null, musicGain);
+        if (step % 4 === 0) playTone(f / 2, .42, "sine", .13, 0, null, musicGain);
+        step++;
+      }, 300);
+    }
+    function playTone(freq, duration, type = "sine", volume = .25, delay = 0, slide = null, destination = masterGain) {
+      if (!audioContext || !destination) return;
+      const start = audioContext.currentTime + delay;
+      const oscillator = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+      oscillator.type = type;
+      oscillator.frequency.setValueAtTime(freq, start);
+      if (slide) oscillator.frequency.exponentialRampToValueAtTime(Math.max(1, slide), start + duration);
+      gain.gain.setValueAtTime(volume, start);
+      gain.gain.exponentialRampToValueAtTime(.001, start + duration);
+      oscillator.connect(gain);
+      gain.connect(destination);
+      oscillator.start(start);
+      oscillator.stop(start + duration);
+    }
+    const sound = {
+      pop: () => playTone(640, .12, "sine", .34, 0, 1150),
+      whoosh: () => playTone(250, .28, "triangle", .17, 0, 900),
+      twinkle: () => [1046,1318,1568,2093].forEach((f,i) => playTone(f,.18,"sine",.12,i*.07)),
+      chime: () => [784,988,1175].forEach((f,i) => playTone(f,.42,"triangle",.2,i*.1)),
+      ding: () => playTone(1568,.75,"sine",.32),
+      boing: () => playTone(230,.34,"sine",.28,0,110),
+      fireworks: () => { for (let i=0;i<7;i++) playTone(250+Math.random()*800,.34,"triangle",.11,i*.12,70); }
+    };
+    document.getElementById("muteBtn").addEventListener("click", event => {
+      muted = !muted;
+      event.currentTarget.textContent = muted ? "🔇" : "🔊";
+      event.currentTarget.setAttribute("aria-label", muted ? "Activar sonidos" : "Silenciar sonidos");
+      if (masterGain) masterGain.gain.setTargetAtTime(muted ? 0 : .72, audioContext.currentTime, .04);
+      if (muted) cancelSpeech();
+    });
+
+    function sparkleAt(element, amount = 12) {
+      if (!element || !element.isConnected) return;
+      const rect = element.getBoundingClientRect();
+      const origin = gameEl.getBoundingClientRect();
+      const x = rect.left - origin.left + rect.width / 2;
+      const y = rect.top - origin.top + rect.height / 2;
+      const icons = ["✨", "⭐", "💖", "🌟"];
+      for (let i = 0; i < amount; i++) {
+        const item = document.createElement("span");
+        item.className = "sparkle";
+        item.textContent = icons[i % icons.length];
+        item.style.left = `${x}px`;
+        item.style.top = `${y}px`;
+        fxEl.appendChild(item);
+        const angle = Math.random() * Math.PI * 2;
+        const distance = 48 + Math.random() * 80;
+        requestAnimationFrame(() => {
+          item.style.transform = `translate(${Math.cos(angle)*distance}px,${Math.sin(angle)*distance}px) scale(1.35)`;
+          item.style.opacity = "0";
+        });
+        setTimeout(() => item.remove(), 850);
+      }
+    }
+    function burstConfetti(id) {
+      for (let i = 0; i < 7; i++) {
+        const timer = setTimeout(() => {
+          if (id !== screenId) return;
+          const rect = gameEl.getBoundingClientRect();
+          sparkleAt({ isConnected: true, getBoundingClientRect: () => ({ left: rect.left + Math.random()*rect.width, top: rect.top + Math.random()*rect.height*.58, width: 1, height: 1 }) }, 9);
+        }, i * 180);
+        addCleanup(() => clearTimeout(timer));
+      }
+      const fireworks = setInterval(() => { if (id === screenId) sound.fireworks(); }, 2400);
+      addCleanup(() => clearInterval(fireworks));
+    }
+
+    function addTurnCue(id) {
+      if (id !== screenId) return null;
+      const cue = document.createElement("div");
+      cue.className = "turn-cue";
+      cue.setAttribute("aria-label", "Tu turno para repetir");
+      cue.innerHTML = "<span>👂</span><span>🗣️</span>";
+      screenEl.appendChild(cue);
+      return cue;
+    }
+    async function repeatPause(id) {
+      const cue = addTurnCue(id);
+      if (!cue) return false;
+      const completed = await wait(3000, id);
+      cue.remove();
+      return completed;
+    }
+
+    const itemLabels = { elephant: "Elefante", egg: "Huevo", elbow: "Codo", ball: "Pelota", fish: "Pez", car: "Auto", tree: "Árbol", nose: "Nariz", foot: "Pie" };
+    function wordCard(key, englishWord) {
+      const card = document.createElement("button");
+      card.type = "button";
+      card.className = "word-card";
+      card.setAttribute("aria-label", `${englishWord}. Toca para escuchar.`);
+      card.innerHTML = `<span class="word-art">${SVG[key]}</span><span class="word-label"><span class="initial">E</span>${englishWord.slice(1)}</span>`;
+      card.addEventListener("click", () => {
+        sound.pop();
+        sparkleAt(card, 8);
+        if (key === "egg") {
+          const art = card.querySelector(".word-art");
+          art.innerHTML = art.dataset.hatched === "yes" ? SVG.egg : SVG.chick;
+          art.dataset.hatched = art.dataset.hatched === "yes" ? "no" : "yes";
+        }
+        speak(VOICE_TEXT[`${key}Word`]);
+      });
+      return card;
+    }
+
+    function showStart() {
+      const id = enterScene(`<section class="scene start-scene"><h1 class="welcome-title">¡Aventura con la letra E!</h1><div class="letter-e" aria-label="Letra E">E</div><button class="play-button" id="playButton" type="button" aria-label="Jugar">▶</button><div class="play-label">¡Jugar!</div></section>`);
+      document.getElementById("playButton").addEventListener("click", async event => {
+        if (event.currentTarget.disabled) return;
+        event.currentTarget.disabled = true;
+        initAudio();
+        if (audioContext && audioContext.state === "suspended") audioContext.resume().catch(() => {});
+        sound.chime();
+        await speak(VOICE_TEXT.start, "start");
+        if (id === screenId) showLetter();
+      });
+    }
+
+    async function showLetter() {
+      const id = enterScene(`<section class="scene letter-scene"><div class="lesson-caption">¡Mira la letra!</div><div id="lessonE" class="letter-e glowing" aria-label="Letra E">E</div></section>`);
+      const letter = document.getElementById("lessonE");
+      const pulse = () => {
+        if (id !== screenId || !letter) return;
+        letter.classList.remove("glowing");
+        void letter.offsetWidth;
+        letter.classList.add("glowing");
+        sound.twinkle();
+      };
+      const first = speak(VOICE_TEXT.letter1, "letter1");
+      const pulseTimers = [1900, 3100, 4300].map(time => setTimeout(pulse, time));
+      addCleanup(() => pulseTimers.forEach(clearTimeout));
+      await first;
+      if (id !== screenId) return;
+      const paused = await repeatPause(id);
+      if (!paused || id !== screenId) return;
+      pulse();
+      await speak(VOICE_TEXT.letter2, "letter2");
+      if (id !== screenId) return;
+      const pausedAgain = await repeatPause(id);
+      if (!pausedAgain || id !== screenId) return;
+      pulse();
+      await speak(VOICE_TEXT.letter3, "letter3");
+      if (id === screenId) beginNext(showWords, id);
+    }
+
+    async function showWords() {
+      const id = enterScene("");
+      const words = [["elephant", "Elephant"], ["egg", "Egg"], ["elbow", "Elbow"]];
+      for (const [key, englishWord] of words) {
+        if (id !== screenId) return;
+        screenEl.innerHTML = `<section class="scene word-scene"><div class="lesson-caption">¡Una palabra nueva!</div></section>`;
+        const scene = screenEl.querySelector(".word-scene");
+        const card = wordCard(key, englishWord);
+        scene.appendChild(card);
+        sound.pop();
+        sparkleAt(card, 8);
+        await speak(VOICE_TEXT[`${key}1`], `${key}1`);
+        if (id !== screenId) return;
+        if (!(await repeatPause(id))) return;
+        await speak(VOICE_TEXT[`${key}2`], `${key}2`);
+        if (id !== screenId) return;
+        if (!(await repeatPause(id))) return;
+        if (key === "egg") {
+          const art = card.querySelector(".word-art");
+          if (art) { art.innerHTML = SVG.chick; sound.chime(); sparkleAt(card, 14); }
+        }
+      }
+      if (id !== screenId) return;
+      screenEl.innerHTML = `<section class="scene recap-scene"><div class="lesson-caption">¡Las tres empiezan con E!</div><div class="recap-row"></div></section>`;
+      const row = screenEl.querySelector(".recap-row");
+      row.style.cssText = "display:flex;justify-content:center;align-items:center;gap:5px;width:100%;flex-wrap:wrap";
+      for (const [key, englishWord] of words) {
+        const card = wordCard(key, englishWord);
+        card.style.width = "min(31vw, 150px)";
+        card.style.padding = "5px";
+        card.querySelector(".word-art").style.width = "min(25vw, 120px)";
+        card.querySelector(".word-art").style.height = "min(20vh, 120px)";
+        card.querySelector(".word-label").style.fontSize = "clamp(19px, 5vw, 27px)";
+        row.appendChild(card);
+      }
+      await speak(VOICE_TEXT.allE, "allE");
+      if (id === screenId) beginNext(() => startRound(0), id);
+    }
+
+    const rounds = [
+      { question: "q1", visible: "¿Dónde está el elefante?", items: ["ball", "elephant", "fish"], answer: "elephant" },
+      { question: "q2", visible: "¡Toca el huevo!", items: ["car", "tree", "egg"], answer: "egg" },
+      { question: "q3", visible: "¿Dónde está el codo?", items: ["nose", "elbow", "foot"], answer: "elbow" },
+      { question: "q4", visible: "Lleva el elefante a la casa con E.", type: "drag" },
+      { question: "q5", visible: "¡Revienta las tres burbujas con E!", type: "bubbles" }
+    ];
+    let feedbackBusy = false;
+    async function gentleMistake(element, questionKey, id) {
+      if (feedbackBusy || id !== screenId) return;
+      feedbackBusy = true;
+      sound.boing();
+      if (element) {
+        element.classList.remove("shaking");
+        void element.offsetWidth;
+        element.classList.add("shaking");
+        setTimeout(() => element.classList.remove("shaking"), 500);
+      }
+      await speak(VOICE_TEXT.mistake, "mistake");
+      if (id === screenId) await speak(VOICE_TEXT[questionKey], questionKey);
+      feedbackBusy = false;
+    }
+    async function celebrateRound(roundIndex, element, id) {
+      if (id !== screenId) return;
+      starCount = roundIndex + 1;
+      drawStars();
+      sound.chime();
+      if (element) sparkleAt(element, 18);
+      setTimeout(sound.ding, 260);
+      const praise = VOICE_TEXT.praise[Math.floor(Math.random() * VOICE_TEXT.praise.length)];
+      await speak(praise);
+      if (id !== screenId) return;
+      if (roundIndex === 4) {
+        await wait(650, id);
+        if (id === screenId) showFinal();
+        return;
+      }
+      beginNext(() => startRound(roundIndex + 1), id);
+    }
+
+    function startRound(index) {
+      const round = rounds[index];
+      if (!round) return;
+      feedbackBusy = false;
+      if (round.type === "drag") return startDragRound(index, round);
+      if (round.type === "bubbles") return startBubbleRound(index, round);
+      const id = enterScene(`<section class="scene game-scene"><h1 class="prompt">${round.visible}</h1><div class="option-grid" id="optionGrid"></div></section>`);
+      let solved = false;
+      const grid = document.getElementById("optionGrid");
+      for (const key of round.items) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "option";
+        button.setAttribute("aria-label", itemLabels[key]);
+        button.innerHTML = SVG[key];
+        button.addEventListener("click", () => {
+          if (solved || id !== screenId) return;
+          if (key === round.answer) {
+            solved = true;
+            button.classList.add("correct");
+            celebrateRound(index, button, id);
+          } else gentleMistake(button, round.question, id);
+        });
+        grid.appendChild(button);
+      }
+      speak(VOICE_TEXT[round.question], round.question);
+    }
+
+    function startDragRound(index, round) {
+      const id = enterScene(`<section class="scene drag-scene"><h1 class="prompt">Lleva el elefante a la casa E</h1><div class="drag-area"><div class="houses" id="houses"></div><button type="button" class="drag-elephant" id="dragElephant" aria-label="Arrastra el elefante">${SVG.elephant}</button></div></section>`);
+      const houses = document.getElementById("houses");
+      for (const label of ["A", "E", "O"]) {
+        const house = document.createElement("button");
+        house.type = "button";
+        house.className = "house";
+        house.dataset.letter = label;
+        house.setAttribute("aria-label", `Casa con la letra ${label}`);
+        house.innerHTML = SVG.house(label);
+        houses.appendChild(house);
+      }
+      const elephant = document.getElementById("dragElephant");
+      let origin = null;
+      let solved = false;
+      const deliver = (letter, target) => {
+        if (solved || id !== screenId) return;
+        if (letter === "E") {
+          solved = true;
+          elephant.classList.add("correct");
+          sound.pop();
+          sparkleAt(target, 18);
+          celebrateRound(index, target, id);
+        } else gentleMistake(target, round.question, id);
+      };
+      houses.querySelectorAll(".house").forEach(house => house.addEventListener("click", () => deliver(house.dataset.letter, house)));
+      elephant.addEventListener("pointerdown", event => {
+        if (solved) return;
+        origin = { x: event.clientX, y: event.clientY };
+        elephant.setPointerCapture(event.pointerId);
+        sound.pop();
+      });
+      elephant.addEventListener("pointermove", event => {
+        if (origin) elephant.style.transform = `translate3d(${event.clientX-origin.x}px,${event.clientY-origin.y}px,0) scale(.88)`;
+      });
+      const finishDrag = event => {
+        if (!origin) return;
+        origin = null;
+        elephant.style.transform = "";
+        let nearest = null;
+        let nearestDistance = Infinity;
+        houses.querySelectorAll(".house").forEach(house => {
+          const rect = house.getBoundingClientRect();
+          const distance = Math.hypot(rect.left + rect.width/2 - event.clientX, rect.top + rect.height/2 - event.clientY);
+          if (distance < nearestDistance) { nearestDistance = distance; nearest = house; }
+        });
+        if (nearest && nearestDistance < 180) deliver(nearest.dataset.letter, nearest);
+      };
+      elephant.addEventListener("pointerup", finishDrag);
+      elephant.addEventListener("pointercancel", () => { origin = null; elephant.style.transform = ""; });
+      speak(VOICE_TEXT[round.question], round.question);
+    }
+
+    function startBubbleRound(index, round) {
+      const id = enterScene(`<section class="scene bubble-scene"><h1 class="prompt">¡Revienta solo las burbujas con E!</h1><div class="bubble-field" id="bubbleField"></div></section>`);
+      const targets = new Set(["elephant", "egg", "elbow"]);
+      const bubbleItems = ["elephant", "ball", "egg", "fish", "elbow", "tree"];
+      for (const key of bubbleItems) {
+        const bubble = document.createElement("button");
+        bubble.type = "button";
+        bubble.className = "bubble";
+        bubble.setAttribute("aria-label", itemLabels[key]);
+        bubble.innerHTML = SVG[key];
+        bubble.addEventListener("click", () => {
+          if (id !== screenId || bubble.classList.contains("popped")) return;
+          if (!targets.has(key)) {
+            gentleMistake(bubble, round.question, id);
+            return;
+          }
+          targets.delete(key);
+          bubble.classList.add("popped");
+          sound.pop();
+          sparkleAt(bubble, 12);
+          setTimeout(() => bubble.remove(), 260);
+          if (targets.size === 0) {
+            document.querySelectorAll(".bubble").forEach(item => item.classList.add("popped"));
+            setTimeout(() => celebrateRound(index, null, id), 180);
+          }
+        });
+        document.getElementById("bubbleField").appendChild(bubble);
+      }
+      speak(VOICE_TEXT[round.question], round.question);
+    }
+
+    async function showFinal() {
+      const id = enterScene(`<section class="scene final-scene"><h1 class="final-title">¡Felicidades!</h1><div class="final-stars" aria-label="Cinco estrellas">${"<span>⭐</span>".repeat(5)}</div><button class="play-button" id="replayButton" type="button" aria-label="Jugar otra vez">↻</button><div class="play-label">¡Jugar otra vez!</div></section>`);
+      burstConfetti(id);
+      sound.fireworks();
+      document.getElementById("replayButton").addEventListener("click", () => {
+        starCount = 0;
+        drawStars();
+        sound.chime();
+        showLetter();
+      });
+      await speak(VOICE_TEXT.final, "final");
+    }
+
+    setInterval(() => {
+      const eyes = document.getElementById("teacher-eyes");
+      if (!eyes) return;
+      eyes.style.transformOrigin = "55px 50px";
+      eyes.style.transform = "scaleY(.12)";
+      setTimeout(() => { if (eyes.isConnected) eyes.style.transform = ""; }, 130);
+    }, 3200);
+
+    showStart();
+  </script>
+</body>
+</html>
